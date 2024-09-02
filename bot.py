@@ -2,9 +2,9 @@ import logging
 import sys
 import asyncio
 from pyrogram import Client, filters
-from pyrogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
-from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, LOG_CHANNEL_ID, POST_CHANNELS, TIMEZONE
-from utils.helpers import get_greeting, handle_photo, post_to_channels, log_to_channel
+from pyrogram.types import Message
+from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL_ID, POST_CHANNELS, TIMEZONE
+from helpers import get_greeting, handle_photo, post_to_channels, log_to_channel
 from datetime import datetime
 import pytz
 
@@ -12,9 +12,9 @@ import pytz
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Commands
+# Command handlers
 @app.on_message(filters.command("start") & filters.private)
 async def start_command(client, message: Message):
     buttons = ReplyKeyboardMarkup(
@@ -48,9 +48,16 @@ async def log_command(client, message: Message):
     await log_to_channel(client, log_message)
     await message.reply("Logged to the channel.")
 
-@app.on_message(filters.private)
-async def handle_all_messages(client, message: Message):
-    await handle_photo(client, message)
+# Message handler for various types of messages
+@app.on_message(filters.text | filters.photo | filters.document | filters.video | filters.audio | filters.sticker | filters.emoji)
+async def handle_message(client, message: Message):
+    if message.photo:
+        await handle_photo(client, message)
+    else:
+        await post_to_channels(client, message)
+    
+    log_message = f"Posted message from {message.from_user.username}: {message.text if message.text else 'No text content'}"
+    await log_to_channel(client, log_message)
 
 async def periodic_tasks():
     while True:
