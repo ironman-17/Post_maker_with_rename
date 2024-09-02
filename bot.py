@@ -38,6 +38,12 @@ async def post_command(client, message: Message):
     user_state[user_id] = 'post'  # Set state to 'post'
     await message.reply("Please send the text or media you want to post.")
 
+@app.on_message(filters.command("schedule") & filters.private)
+async def schedule_command(client, message: Message):
+    user_id = message.from_user.id
+    user_state[user_id] = 'schedule'  # Set state to 'schedule'
+    await message.reply("Please send the text you want to schedule.")
+
 @app.on_message(filters.text & filters.private)
 async def handle_text(client, message: Message):
     user_id = message.from_user.id
@@ -48,8 +54,26 @@ async def handle_text(client, message: Message):
         user_state[user_id] = None  # Clear the state after posting
     elif user_state.get(user_id) == 'schedule':
         user_state[user_id] = 'schedule_text'
-        user_state['schedule_message'] = message.text
+        user_state[user_id] = {'schedule_message': message.text}
         await message.reply("Please enter the time to post (HH:MM format):")
+    elif user_state.get(user_id) == 'schedule_text':
+        try:
+            schedule_time = datetime.strptime(message.text, "%H:%M").time()
+            now = datetime.now(pytz.timezone(TIMEZONE))
+            scheduled_datetime = datetime.combine(now.date(), schedule_time)
+            if scheduled_datetime < now:
+                scheduled_datetime += timedelta(days=1)
+            delay = (scheduled_datetime - now).total_seconds()
+            await asyncio.create_task(schedule_post(client, user_state[user_id]['schedule_message'], delay))
+            await message.reply(f"Message scheduled for {scheduled_datetime.strftime('%H:%M')}.")
+            user_state[user_id] = None  # Clear the state after scheduling
+        except ValueError:
+            await message.reply("Invalid time format. Please enter the time as HH:MM.")
+            user_state[user_id] = 'schedule_text'  # Prompt to re-enter time
+
+async def schedule_post(client, text, delay):
+    await asyncio.sleep(delay)
+    await post_to_channels(client, text)
 
 @app.on_message(filters.command("rename") & filters.private)
 async def rename_command(client, message: Message):
@@ -82,33 +106,6 @@ async def log_command(client, message: Message):
     log_message = "Bot log: " + get_greeting()
     await log_to_channel(client, log_message)
     await message.reply("Logged to the channel.")
-
-@app.on_message(filters.command("schedule") & filters.private)
-async def schedule_command(client, message: Message):
-    user_id = message.from_user.id
-    user_state[user_id] = 'schedule'  # Set state to 'schedule'
-    await message.reply("Please send the text you want to schedule.")
-
-@app.on_message(filters.text & filters.private)
-async def handle_scheduled_text(client, message: Message):
-    user_id = message.from_user.id
-    if user_state.get(user_id) == 'schedule_text':
-        try:
-            schedule_time = datetime.strptime(message.text, "%H:%M").time()
-            now = datetime.now(pytz.timezone(TIMEZONE))
-            scheduled_datetime = datetime.combine(now, schedule_time)
-            if scheduled_datetime < now:
-                scheduled_datetime += timedelta(days=1)
-            delay = (scheduled_datetime - now).total_seconds()
-            asyncio.create_task(schedule_post(client, user_state['schedule_message'], delay))
-            await message.reply(f"Message scheduled for {schedule_time}.")
-            user_state[user_id] = None
-        except ValueError:
-            await message.reply("Invalid time format. Please enter the time as HH:MM.")
-
-async def schedule_post(client, text, delay):
-    await asyncio.sleep(delay)
-    await post_to_channels(client, text)
 
 async def periodic_tasks():
     while True:
