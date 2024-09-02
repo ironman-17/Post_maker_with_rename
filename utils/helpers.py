@@ -53,15 +53,12 @@ async def post_to_channels(client: Client, message: Message):
                     chat_id=channel,
                     sticker=message.sticker.file_id
                 )
-            elif message.emoji:
-                # Send emoji to channel
+            elif message.text:
+                # Send text to channel
                 await client.send_message(
                     chat_id=channel,
                     text=message.text
                 )
-            else:
-                # Send text to channel
-                await client.send_message(channel, message.text)
         except Exception as e:
             print(f"Error sending message to {channel}: {e}")
 
