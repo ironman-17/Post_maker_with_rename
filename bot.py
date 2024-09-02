@@ -61,4 +61,4 @@ async def handle_all_messages(client, message: Message):
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.create_task(periodic_tasks())
-    app.run()
+    app.run()  # You can use this in place of loop.run_until_complete(periodic_tasks())
