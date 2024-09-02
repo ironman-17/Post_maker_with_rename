@@ -1,6 +1,7 @@
 import logging
 import sys
 from pyrogram import Client
+from commands import register_commands
 from config import API_ID, API_HASH, BOT_TOKEN
 
 # Import the function to register commands
