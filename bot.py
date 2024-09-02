@@ -39,6 +39,10 @@ async def log_command(client, message: Message):
     await log_to_channel(client, log_message)
     await message.reply("Logged to the channel.")
 
+@app.on_message(filters.private)
+async def handle_all_messages(client, message: Message):
+    await handle_photo(client, message)
+
 async def periodic_tasks():
     while True:
         now = datetime.now(pytz.timezone(TIMEZONE))
@@ -48,10 +52,12 @@ async def periodic_tasks():
             await app.send_message(LOG_CHANNEL_ID, "Good night message")
         await asyncio.sleep(60)
 
-@app.on_message(filters.private)
-async def handle_all_messages(client, message: Message):
-    await handle_photo(client, message)
+async def main():
+    await app.start()
+    await periodic_tasks()
 
 if __name__ == "__main__":
-    app.start()
-    asyncio.run(periodic_tasks())
+    try:
+        app.run(main())
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
