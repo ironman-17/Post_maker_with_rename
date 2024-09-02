@@ -2,19 +2,13 @@
 
 import logging
 import asyncio
-from datetime import datetime
-from pytz import timezone
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, LOG_CHANNEL_ID, POST_CHANNELS, TIMEZONE
 from utils.helpers import get_greeting, handle_photo, post_to_channels, log_to_channel
+from datetime import datetime
+import pytz
 
-# Ensure the logs directory exists
-import os
-if not os.path.exists('logs'):
-    os.makedirs('logs')
-
-# Configure logging
 logging.basicConfig(level=logging.INFO, filename='logs/bot.log', format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -47,7 +41,7 @@ async def log_command(client, message: Message):
 
 async def periodic_tasks():
     while True:
-        now = datetime.now(timezone(TIMEZONE))
+        now = datetime.now(pytz.timezone(TIMEZONE))
         if now.hour == 9 and now.minute == 0:
             await app.send_message(LOG_CHANNEL_ID, "Good morning message")
         if now.hour == 21 and now.minute == 0:
@@ -59,6 +53,6 @@ async def handle_all_messages(client, message: Message):
     await handle_photo(client, message)
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.create_task(periodic_tasks())
     app.start()
+    asyncio.run(periodic_tasks())
+    
