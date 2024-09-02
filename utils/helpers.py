@@ -18,13 +18,22 @@ def get_greeting():
 
 async def post_to_channels(client: Client, text: str):
     for channel in POST_CHANNELS:
-        await client.send_message(channel, text)
+        try:
+            await client.send_message(channel, text)
+        except Exception as e:
+            print(f"Error sending message to {channel}: {e}")
 
 async def log_to_channel(client: Client, message: str):
-    await client.send_message(LOG_CHANNEL_ID, message)
+    try:
+        await client.send_message(LOG_CHANNEL_ID, message)
+    except Exception as e:
+        print(f"Error logging message: {e}")
 
 async def handle_photo(client: Client, message: Message):
     if message.photo:
         # Implement photo auto-captioning logic here
         caption = "Auto-captioned text here"
-        await client.send_message(message.chat.id, caption)
+        try:
+            await client.send_message(message.chat.id, caption)
+        except Exception as e:
+            print(f"Error sending photo caption: {e}")
