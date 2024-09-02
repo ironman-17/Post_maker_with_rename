@@ -1,5 +1,4 @@
 from pyrogram import filters
-from modules.commands import register_commands
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from utils.helpers import get_greeting, handle_photo, post_to_channels, log_to_channel
 
