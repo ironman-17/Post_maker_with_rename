@@ -1,6 +1,5 @@
-# bot.py
-
 import logging
+import sys
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -9,7 +8,8 @@ from utils.helpers import get_greeting, handle_photo, post_to_channels, log_to_c
 from datetime import datetime
 import pytz
 
-logging.basicConfig(level=logging.INFO, filename='logs/bot.log', format='%(asctime)s - %(levelname)s - %(message)s')
+# Setup logging to stdout
+logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
@@ -55,4 +55,3 @@ async def handle_all_messages(client, message: Message):
 if __name__ == "__main__":
     app.start()
     asyncio.run(periodic_tasks())
-    
