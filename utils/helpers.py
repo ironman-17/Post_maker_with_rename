@@ -1,6 +1,7 @@
 from datetime import datetime
 from pytz import timezone
-from pyrogram import Client, Message
+from pyrogram import Client
+from pyrogram.types import Message  # Correct import for Message
 from config import POST_CHANNELS, LOG_CHANNEL_ID  # Ensure these are imported
 
 def get_greeting():
