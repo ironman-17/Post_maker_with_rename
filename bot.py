@@ -72,11 +72,4 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"An error occurred: {e}")
 
-    await app.start()
-    await periodic_tasks()
-
-if __name__ == "__main__":
-    try:
-        app.run(main())
-    except Exception as e:
-        logger.error(f"An error occurred: {e}")
+    
