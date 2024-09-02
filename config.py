@@ -1,9 +1,9 @@
 # config.py
 
-API_ID = 'your_api_id'
-API_HASH = 'your_api_hash'
-BOT_TOKEN = 'your_bot_token'
-MONGO_URI = 'your_mongodb_uri'
-LOG_CHANNEL_ID = -1001234567890
-POST_CHANNELS = [-1001234567891, -1001234567892]
+API_ID = '25208218
+API_HASH = 'cc8e841203c92f077015b865f44a8663 api hash'
+BOT_TOKEN = '7478730845:AAF19Hkk5uQbb6NRD1_RKtwwEAKuFZ7NxEc'
+MONGO_URI = 'mongodb+srv://mohdkaif2082:kaif1344@cluster0.pr8z3dx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+LOG_CHANNEL_ID = -1002192763590
+POST_CHANNELS = [-1002192763590]
 TIMEZONE = 'Asia/Kolkata'
