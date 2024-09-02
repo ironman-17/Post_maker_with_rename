@@ -36,3 +36,12 @@ This project is a Telegram bot that supports posting to multiple channels, handl
 - File renaming feature (to be implemented)
 - Logging functionality
 - Error handling
+
+
+## Handles commands: 
+
+- start
+- post
+- rename
+- status
+- log
