@@ -2,8 +2,8 @@ import logging
 import sys
 import asyncio
 from pyrogram import Client, filters
-from pyrogram.types import Message
-from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL_ID, POST_CHANNELS, TIMEZONE
+from pyrogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, LOG_CHANNEL_ID, POST_CHANNELS, TIMEZONE
 from helpers import get_greeting, handle_photo, post_to_channels, log_to_channel
 from datetime import datetime
 import pytz
@@ -12,9 +12,9 @@ import pytz
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Command handlers
+# Commands
 @app.on_message(filters.command("start") & filters.private)
 async def start_command(client, message: Message):
     buttons = ReplyKeyboardMarkup(
@@ -30,7 +30,7 @@ async def start_command(client, message: Message):
 @app.on_message(filters.command("post") & filters.private)
 async def post_command(client, message: Message):
     text = message.text.split(None, 1)[1] if len(message.text.split(None, 1)) > 1 else ''
-    await post_to_channels(client, text)
+    await post_to_channels(client, message)
     await message.reply("Posted to all channels.")
 
 @app.on_message(filters.command("rename") & filters.private)
@@ -48,16 +48,10 @@ async def log_command(client, message: Message):
     await log_to_channel(client, log_message)
     await message.reply("Logged to the channel.")
 
-# Message handler for various types of messages
-@app.on_message(filters.text | filters.photo | filters.document | filters.video | filters.audio | filters.sticker | filters.emoji)
+@app.on_message(filters.photo | filters.document | filters.video | filters.audio | filters.sticker | filters.emoji | filters.text)
 async def handle_message(client, message: Message):
-    if message.photo:
-        await handle_photo(client, message)
-    else:
-        await post_to_channels(client, message)
-    
-    log_message = f"Posted message from {message.from_user.username}: {message.text if message.text else 'No text content'}"
-    await log_to_channel(client, log_message)
+    await post_to_channels(client, message)
+    await log_to_channel(client, f"Posted message from {message.from_user.username}: {message.text}")
 
 async def periodic_tasks():
     while True:
