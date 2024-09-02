@@ -38,16 +38,13 @@ async def post_command(client, message: Message):
     user_state[user_id] = 'post'  # Set state to 'post'
     await message.reply("Please send the text or media you want to post.")
 
-@app.on_message(filters.command("schedule") & filters.private)
-async def schedule_command(client, message: Message):
-    user_id = message.from_user.id
-    user_state[user_id] = 'schedule'  # Set state to 'schedule'
-    await message.reply("Please send the text you want to schedule.")
-
 @app.on_message(filters.text & filters.private)
 async def handle_text(client, message: Message):
     user_id = message.from_user.id
-    if user_state.get(user_id) == 'post':
+    if message.text == "Schedule Post":
+        user_state[user_id] = 'schedule'  # Set state to 'schedule'
+        await message.reply("Please send the text you want to schedule.")
+    elif user_state.get(user_id) == 'post':
         text = message.text
         await post_to_channels(client, text)
         await message.reply("Posted to all channels.")
