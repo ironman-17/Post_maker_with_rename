@@ -5,7 +5,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL_ID, POST_CHANNELS, TIMEZONE
 from utils.helpers import get_greeting, handle_photo, post_to_channels, log_to_channel
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 # Setup logging to stdout
@@ -26,7 +26,7 @@ async def start_command(client, message: Message):
         [
             [KeyboardButton("/start"), KeyboardButton("/post")],
             [KeyboardButton("/rename"), KeyboardButton("/status")],
-            [KeyboardButton("/log")]
+            [KeyboardButton("/log"), KeyboardButton("Schedule Post")]
         ],
         resize_keyboard=True
     )
@@ -46,6 +46,10 @@ async def handle_text(client, message: Message):
         await post_to_channels(client, text)
         await message.reply("Posted to all channels.")
         user_state[user_id] = None  # Clear the state after posting
+    elif user_state.get(user_id) == 'schedule':
+        user_state[user_id] = 'schedule_text'
+        user_state['schedule_message'] = message.text
+        await message.reply("Please enter the time to post (HH:MM format):")
 
 @app.on_message(filters.command("rename") & filters.private)
 async def rename_command(client, message: Message):
@@ -78,6 +82,33 @@ async def log_command(client, message: Message):
     log_message = "Bot log: " + get_greeting()
     await log_to_channel(client, log_message)
     await message.reply("Logged to the channel.")
+
+@app.on_message(filters.command("schedule") & filters.private)
+async def schedule_command(client, message: Message):
+    user_id = message.from_user.id
+    user_state[user_id] = 'schedule'  # Set state to 'schedule'
+    await message.reply("Please send the text you want to schedule.")
+
+@app.on_message(filters.text & filters.private)
+async def handle_scheduled_text(client, message: Message):
+    user_id = message.from_user.id
+    if user_state.get(user_id) == 'schedule_text':
+        try:
+            schedule_time = datetime.strptime(message.text, "%H:%M").time()
+            now = datetime.now(pytz.timezone(TIMEZONE))
+            scheduled_datetime = datetime.combine(now, schedule_time)
+            if scheduled_datetime < now:
+                scheduled_datetime += timedelta(days=1)
+            delay = (scheduled_datetime - now).total_seconds()
+            asyncio.create_task(schedule_post(client, user_state['schedule_message'], delay))
+            await message.reply(f"Message scheduled for {schedule_time}.")
+            user_state[user_id] = None
+        except ValueError:
+            await message.reply("Invalid time format. Please enter the time as HH:MM.")
+
+async def schedule_post(client, text, delay):
+    await asyncio.sleep(delay)
+    await post_to_channels(client, text)
 
 async def periodic_tasks():
     while True:
