@@ -1,4 +1,4 @@
-pyrogram==2.3.0  # Example version, adjust according to availability
+pyrogram==2.0.0
 pymongo
 pytz
 Flask==1.1.2
