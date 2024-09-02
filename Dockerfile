@@ -1,20 +1,11 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.11
+FROM python:3.8-slim-buster
 
-# Set the working directory in the container
-WORKDIR /app
+MORKDIR /app
 
-# Copy the requirements.txt file into the container
-COPY requirements.txt .
+COPY requirements.txt requirements.txt
 
-# Install the dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install requirements.txt
 
-# Copy the rest of the application code into the container
-COPY . .
+COPY
 
-# Expose the port the app runs on (change if needed)
-EXPOSE 8080
-
-# Define the command to run the bot
-CMD ["python", "bot.py"]
+CHD gunicorn app:app & python main.py
