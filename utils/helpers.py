@@ -1,8 +1,7 @@
-# utils/helpers.py
-
 from datetime import datetime
 from pytz import timezone
-from pyrogram import Client
+from pyrogram import Client, Message
+from config import POST_CHANNELS, LOG_CHANNEL_ID  # Ensure these are imported
 
 def get_greeting():
     now = datetime.now(timezone('Asia/Kolkata'))
@@ -18,8 +17,6 @@ def get_greeting():
 
 async def post_to_channels(client: Client, text: str):
     for channel in POST_CHANNELS:
-async def post_to_channels(client: Client, text: str):
-    for channel in POST_CHANNELS:
         await client.send_message(channel, text)
 
 async def log_to_channel(client: Client, message: str):
@@ -30,5 +27,3 @@ async def handle_photo(client: Client, message: Message):
         # Implement photo auto-captioning logic here
         caption = "Auto-captioned text here"
         await client.send_message(message.chat.id, caption)
-        
-      
