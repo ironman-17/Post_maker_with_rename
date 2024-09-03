@@ -3,7 +3,7 @@ import sys
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
-from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL_ID, POST_CHANNELS, TIMEZONE
+from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL_ID, POST_CHANNELS, TIMEZONE, OWNER_ID
 from utils.helpers import get_greeting, handle_photo, post_to_channels, log_to_channel
 from datetime import datetime, timedelta
 import pytz
@@ -17,16 +17,23 @@ app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 # State management
 user_state = {}
 
+async def is_owner(user_id):
+    return user_id == OWNER_ID
+
 # Commands
 @app.on_message(filters.command("start") & filters.private)
 async def start_command(client, message: Message):
     user_id = message.from_user.id
+    if not await is_owner(user_id):
+        await message.reply("You are not authorized to use this bot.")
+        return
+    
     user_state[user_id] = None  # Clear any active state
     buttons = ReplyKeyboardMarkup(
         [
             [KeyboardButton("/start"), KeyboardButton("/post")],
             [KeyboardButton("/rename"), KeyboardButton("/status")],
-            [KeyboardButton("/log"), KeyboardButton("Schedule Post")]
+            [KeyboardButton("/log"), KeyboardButton("/schedule")]
         ],
         resize_keyboard=True
     )
@@ -35,97 +42,107 @@ async def start_command(client, message: Message):
 @app.on_message(filters.command("post") & filters.private)
 async def post_command(client, message: Message):
     user_id = message.from_user.id
+    if not await is_owner(user_id):
+        await message.reply("You are not authorized to use this bot.")
+        return
+    
     user_state[user_id] = 'post'  # Set state to 'post'
     await message.reply("Please send the text or media you want to post.")
+
+@app.on_message(filters.command("schedule") & filters.private)
+async def schedule_command(client, message: Message):
+    user_id = message.from_user.id
+    if not await is_owner(user_id):
+        await message.reply("You are not authorized to use this bot.")
+        logger.info(f"Unauthorized user {user_id} tried to use schedule command.")
+        return
+    
+    user_state[user_id] = 'schedule'  # Set state to 'schedule'
+    await message.reply("Please send the text or media you want to schedule.")
+    logger.info(f"User {user_id} is scheduling a post.")
 
 @app.on_message(filters.text & filters.private)
 async def handle_text(client, message: Message):
     user_id = message.from_user.id
-    if user_state.get(user_id) == 'post':
+    state = user_state.get(user_id)
+    
+    if state == 'post':
         text = message.text
         await post_to_channels(client, text)
         await message.reply("Posted to all channels.")
         user_state[user_id] = None  # Clear the state after posting
-    elif user_state.get(user_id) == 'schedule':
+    elif state == 'schedule':
         user_state[user_id] = 'schedule_text'
         user_state['schedule_message'] = message.text
         await message.reply("Please enter the time to post (HH:MM format):")
-
-@app.on_message(filters.command("rename") & filters.private)
-async def rename_command(client, message: Message):
-    user_id = message.from_user.id
-    user_state[user_id] = 'rename'  # Set state to 'rename'
-    await message.reply("Please send the file you want to rename.")
+    elif state == 'schedule_text':
+        try:
+            schedule_time = datetime.strptime(message.text, "%H:%M").time()
+            now = datetime.now(pytz.timezone(TIMEZONE))
+            scheduled_datetime = datetime.combine(now, schedule_time)
+            if scheduled_datetime < now:
+                scheduled_datetime += timedelta(days=1)
+            delay = (scheduled_datetime - now).total_seconds()
+            asyncio.create_task(schedule_post(client, user_state['schedule_message'], delay))
+            await message.reply(f"Message scheduled for {schedule_time}.")
+            user_state[user_id] = None
+        except ValueError:
+            await message.reply("Invalid time format. Please enter the time as HH:MM.")
 
 @app.on_message(filters.media & filters.private)
 async def handle_media(client, message: Message):
     user_id = message.from_user.id
-    if user_state.get(user_id) == 'rename':
+    state = user_state.get(user_id)
+    
+    if state == 'rename':
         # Implement the file renaming logic here
         await message.reply("File has been renamed.")
         user_state[user_id] = None  # Clear the state after renaming
-    elif user_state.get(user_id) == 'post':
+    elif state == 'post':
         await post_to_channels(client, message)
         await message.reply("Posted to all channels.")
         user_state[user_id] = None  # Clear the state after posting
-    elif user_state.get(user_id) == 'schedule_media':
-        # Handle media if any for scheduled post
-        await handle_photo(client, message)
-        await message.reply("Media attached and scheduled.")
+    elif state == 'schedule':
+        user_state['schedule_message'] = message
+        await message.reply("Please enter the time to post (HH:MM format):")
+        user_state[user_id] = 'schedule_text'
+
+@app.on_message(filters.command("rename") & filters.private)
+async def rename_command(client, message: Message):
+    user_id = message.from_user.id
+    if not await is_owner(user_id):
+        await message.reply("You are not authorized to use this bot.")
+        return
+    
+    user_state[user_id] = 'rename'  # Set state to 'rename'
+    await message.reply("Please send the file you want to rename.")
 
 @app.on_message(filters.command("status") & filters.private)
 async def status_command(client, message: Message):
     user_id = message.from_user.id
+    if not await is_owner(user_id):
+        await message.reply("You are not authorized to use this bot.")
+        return
+    
     user_state[user_id] = None  # Clear any active state
     await message.reply("Bot is running smoothly.")
 
 @app.on_message(filters.command("log") & filters.private)
 async def log_command(client, message: Message):
     user_id = message.from_user.id
+    if not await is_owner(user_id):
+        await message.reply("You are not authorized to use this bot.")
+        return
+    
     user_state[user_id] = None  # Clear any active state
     log_message = "Bot log: " + get_greeting()
     await log_to_channel(client, log_message)
     await message.reply("Logged to the channel.")
 
-@app.on_message(filters.command("schedule") & filters.private)
-async def schedule_command(client, message: Message):
-    user_id = message.from_user.id
-    user_state[user_id] = 'schedule'  # Set state to 'schedule'
-    logger.info(f"User {user_id} initiated schedule command.")
-    await message.reply("Please send the text you want to schedule.")
-
-@app.on_message(filters.text & filters.private)
-async def handle_scheduled_text(client, message: Message):
-    user_id = message.from_user.id
-    if user_state.get(user_id) == 'schedule_text':
-        try:
-            # Parse the time entered by the user
-            schedule_time = datetime.strptime(message.text, "%H:%M").time()
-            now = datetime.now(pytz.timezone(TIMEZONE))
-            scheduled_datetime = datetime.combine(now, schedule_time)
-            
-            # If the scheduled time is in the past, set it for the next day
-            if scheduled_datetime < now:
-                scheduled_datetime += timedelta(days=1)
-            
-            # Calculate the delay
-            delay = (scheduled_datetime - now).total_seconds()
-            
-            # Log the scheduled time and delay for debugging
-            logger.info(f"Scheduling post with message: '{user_state['schedule_message']}' at {scheduled_datetime}. Delay: {delay} seconds.")
-            
-            # Schedule the post
-            asyncio.create_task(schedule_post(client, user_state['schedule_message'], delay))
-            
-            # Notify the user
-            await message.reply(f"Message scheduled for {schedule_time}. Please send the media to attach (if any).")
-            user_state[user_id] = 'schedule_media'  # Update state to 'schedule_media'
-        except ValueError:
-            await message.reply("Invalid time format. Please enter the time as HH:MM.")
-
-async def schedule_post(client, text, delay):
+async def schedule_post(client, message, delay):
     await asyncio.sleep(delay)
-    await post_to_channels(client, text)
+    await post_to_channels(client, message)
+    logger.info("Scheduled post sent.")
 
 async def periodic_tasks():
     while True:
