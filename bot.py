@@ -91,6 +91,7 @@ async def log_command(client, message: Message):
 async def schedule_command(client, message: Message):
     user_id = message.from_user.id
     user_state[user_id] = 'schedule'  # Set state to 'schedule'
+    logger.info(f"User {user_id} initiated schedule command.")
     await message.reply("Please send the text you want to schedule.")
 
 @app.on_message(filters.text & filters.private)
