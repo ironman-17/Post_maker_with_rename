@@ -79,7 +79,9 @@ async def handle_text(client, message: Message):
         try:
             schedule_time = datetime.strptime(message.text, "%H:%M").time()
             now = datetime.now(pytz.timezone(TIMEZONE))
-            scheduled_datetime = datetime.combine(now, schedule_time)
+            scheduled_datetime = datetime.combine(now.date(), schedule_time)
+            scheduled_datetime = pytz.timezone(TIMEZONE).localize(scheduled_datetime)  # Make it timezone-aware
+
             if scheduled_datetime < now:
                 scheduled_datetime += timedelta(days=1)
             delay = (scheduled_datetime - now).total_seconds()
