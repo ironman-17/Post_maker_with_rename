@@ -69,10 +69,9 @@ async def handle_media(client, message: Message):
         await message.reply("Posted to all channels.")
         user_state[user_id] = None  # Clear the state after posting
     elif user_state.get(user_id) == 'schedule_media':
-        # Schedule the post with media
-        await app.send_photo(POST_CHANNELS[0], photo=message.photo.file_id, caption=user_state['schedule_message'])
-        await message.reply("Scheduled post with media.")
-        user_state[user_id] = None  # Clear the state after scheduling
+        # Handle media if any for scheduled post
+        await handle_photo(client, message)
+        await message.reply("Media attached and scheduled.")
 
 @app.on_message(filters.command("status") & filters.private)
 async def status_command(client, message: Message):
@@ -99,18 +98,33 @@ async def handle_scheduled_text(client, message: Message):
     user_id = message.from_user.id
     if user_state.get(user_id) == 'schedule_text':
         try:
+            # Parse the time entered by the user
             schedule_time = datetime.strptime(message.text, "%H:%M").time()
             now = datetime.now(pytz.timezone(TIMEZONE))
             scheduled_datetime = datetime.combine(now, schedule_time)
+            
+            # If the scheduled time is in the past, set it for the next day
             if scheduled_datetime < now:
                 scheduled_datetime += timedelta(days=1)
+            
+            # Calculate the delay
             delay = (scheduled_datetime - now).total_seconds()
-            user_state[user_id] = 'schedule_media'
-            user_state['schedule_message'] = message.text
-            user_state['schedule_delay'] = delay
-            await message.reply(f"Text scheduled. Now, please send the media to schedule for {schedule_time}.")
+            
+            # Log the scheduled time and delay for debugging
+            logger.info(f"Scheduling post with message: '{user_state['schedule_message']}' at {scheduled_datetime}. Delay: {delay} seconds.")
+            
+            # Schedule the post
+            asyncio.create_task(schedule_post(client, user_state['schedule_message'], delay))
+            
+            # Notify the user
+            await message.reply(f"Message scheduled for {schedule_time}. Please send the media to attach (if any).")
+            user_state[user_id] = 'schedule_media'  # Update state to 'schedule_media'
         except ValueError:
             await message.reply("Invalid time format. Please enter the time as HH:MM.")
+
+async def schedule_post(client, text, delay):
+    await asyncio.sleep(delay)
+    await post_to_channels(client, text)
 
 async def periodic_tasks():
     while True:
