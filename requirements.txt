@@ -1,4 +1,4 @@
-git+https://github.com/vpcreatz/pyrofork-adv
+pyrofork
 pymongo
 pytz
 Flask==1.1.2
