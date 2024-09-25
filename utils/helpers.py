@@ -8,13 +8,13 @@ def get_greeting():
     now = datetime.now(timezone('Asia/Kolkata'))
     hour = now.hour
     if 5 <= hour < 12:
-        return "Good morning!"
+        return "Good morning"
     elif 12 <= hour < 17:
-        return "Good afternoon!"
+        return "Good afternoon"
     elif 17 <= hour < 21:
-        return "Good evening!"
+        return "Good evening"
     else:
-        return "Good night!"
+        return "Good night"
 
 async def post_to_channels(client: Client, message: Message):
     for channel in POST_CHANNELS:
