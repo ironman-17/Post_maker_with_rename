@@ -145,6 +145,12 @@ async def periodic_tasks():
 async def main():
     await app.start()
     
+    # एक प्रयास करें कि पहले चैनल से इंटरैक्ट करें
+    try:
+        await app.get_chat(LOG_CHANNEL_ID)  # इसे एक बार कॉल करें
+    except Exception as e:
+        print(f"Error accessing log channel: {e}")
+
     # Log Channel Notification on Start
     me = await app.get_me()
     await app.send_message(LOG_CHANNEL_ID, f"**__{me.first_name} Bot has started.__**")
