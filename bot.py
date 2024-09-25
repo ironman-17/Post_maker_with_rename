@@ -150,9 +150,9 @@ async def periodic_tasks():
     while True:
         now = datetime.now(pytz.timezone(TIMEZONE))
         if now.hour == 9 and now.minute == 0:
-            await app.send_message(LOG_CHANNEL_ID, "Good morning message")
+            await app.send_message(LOG_CHANNEL_ID, "Good morning Sir")
         if now.hour == 21 and now.minute == 0:
-            await app.send_message(LOG_CHANNEL_ID, "Good night message")
+            await app.send_message(LOG_CHANNEL_ID, "Good night Sir")
         await asyncio.sleep(60)
 
 async def main():
