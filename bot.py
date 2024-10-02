@@ -15,6 +15,17 @@ user_state = {}
 async def is_owner(user_id):
     return user_id == OWNER_ID
 
+# Function to post to all channels
+async def post_to_channels(client, message):
+    for channel_id in POST_CHANNELS:
+        try:
+            if isinstance(message, str):  # Handling text message
+                await client.send_message(channel_id, message)
+            else:  # Handling media message
+                await handle_photo(client, channel_id, message)
+        except Exception as e:
+            print(f"Failed to post in {channel_id}: {e}")
+
 # Commands
 @app.on_message(filters.command("start") & filters.private)
 async def start_command(client, message: Message):
@@ -129,25 +140,28 @@ async def status_command(client, message: Message):
     
     await message.reply("Bot is running smoothly.")
 
+# Function to handle scheduled posts
 async def schedule_post(client, message, delay):
     await asyncio.sleep(delay)
     await post_to_channels(client, message)
 
+# Periodic tasks (for morning/evening messages)
 async def periodic_tasks():
     while True:
         now = datetime.now(pytz.timezone(TIMEZONE))
         if now.hour == 9 and now.minute == 0:
             await app.send_message(LOG_CHANNEL_ID, "Good morning Sir")
-        if now.hour == 21 and now.minute == 0:
+        elif now.hour == 21 and now.minute == 0:
             await app.send_message(LOG_CHANNEL_ID, "Good night Sir")
         await asyncio.sleep(60)
 
+# Main function to start the bot and log the startup message
 async def main():
     await app.start()
     
-    # एक प्रयास करें कि पहले चैनल से इंटरैक्ट करें
+    # Check log channel access
     try:
-        await app.get_chat(LOG_CHANNEL_ID)  # इसे एक बार कॉल करें
+        await app.get_chat(LOG_CHANNEL_ID)  # Test connection to the log channel
     except Exception as e:
         print(f"Error accessing log channel: {e}")
 
