@@ -17,7 +17,7 @@ def get_greeting():
         return "Good night"
 
 async def post_to_channels(client: Client, message: Message):
-    if isinstance(message, Message):
+    if message and isinstance(message, Message):
         for channel in POST_CHANNELS:
             try:
                 if message.photo:
@@ -63,7 +63,7 @@ async def post_to_channels(client: Client, message: Message):
             except Exception as e:
                 print(f"Error sending message to {channel}: {e}")
     else:
-        print("Error: The provided message is not a valid Pyrogram Message object.")
+        print(f"Error: The provided message is not a valid Pyrogram Message object. Content: {message}")
 
 async def log_to_channel(client: Client, message: str):
     try:
