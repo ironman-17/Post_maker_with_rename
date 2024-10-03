@@ -1,21 +1,8 @@
-from datetime import datetime
-from pytz import timezone
-from pyrogram import Client
+from pyrogram import Client, filters  # filters import karo
 from pyrogram.types import Message
 from config import POST_CHANNELS, LOG_CHANNEL_ID
-
-# Function to get greeting based on current time
-def get_greeting():
-    now = datetime.now(timezone('Asia/Kolkata'))
-    hour = now.hour
-    if 5 <= hour < 12:
-        return "Good morning"
-    elif 12 <= hour < 17:
-        return "Good afternoon"
-    elif 17 <= hour < 21:
-        return "Good evening"
-    else:
-        return "Good night"
+from datetime import datetime
+from pytz import timezone
 
 # Function to post message to channels
 async def post_to_channels(client: Client, message: Message):
@@ -24,10 +11,9 @@ async def post_to_channels(client: Client, message: Message):
             # Agar message text ho
             if message.text:
                 for channel in POST_CHANNELS:
-                    greeting = get_greeting()  # Get greeting based on current time
                     await client.send_message(
                         chat_id=channel,
-                        text=f"{greeting}\n\n{message.text}"  # Send text with greeting
+                        text=message.text  # Send text to the channel
                     )
             
             # Agar message photo ho
@@ -101,3 +87,16 @@ async def handle_media(client: Client, message: Message):
         await post_to_channels(client, message)
     except Exception as e:
         print(f"Error occurred while handling media: {e}")
+
+# Greeting function
+def get_greeting():
+    now = datetime.now(timezone('Asia/Kolkata'))
+    hour = now.hour
+    if 5 <= hour < 12:
+        return "Good morning"
+    elif 12 <= hour < 17:
+        return "Good afternoon"
+    elif 17 <= hour < 21:
+        return "Good evening"
+    else:
+        return "Good night"
