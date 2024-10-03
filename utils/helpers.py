@@ -5,10 +5,8 @@ from datetime import datetime
 from pytz import timezone
 
 # Function to post string/text directly to channels
-async def post_text_to_channels(client: Client, message):
+async def post_text_to_channels(client: Client, text: str):
     try:
-        # Check if message is a Message object or string, and extract text accordingly
-        text = message.text if isinstance(message, Message) else message  # If string, use directly; if Message, use .text
         for channel in POST_CHANNELS:
             await client.send_message(chat_id=channel, text=text)
     except Exception as e:
@@ -47,11 +45,13 @@ async def log_to_channel(client: Client, message: str):
 # Handler for string/text messages
 @Client.on_message(filters.text)
 async def handle_text(client: Client, message: Message):
-    try:
-        # Pass message directly
-        await post_text_to_channels(client, message)
-    except Exception as e:
-        print(f"Error occurred while handling text: {e}")
+    if hasattr(message, 'text') and isinstance(message.text, str):
+        try:
+            await post_text_to_channels(client, message.text)
+        except Exception as e:
+            print(f"Error occurred while handling text: {e}")
+    else:
+        print("Message does not have 'text' attribute or it's not a string.")
 
 # Handler for media messages (photo, document, video, audio, sticker)
 @Client.on_message(filters.photo | filters.document | filters.video | filters.audio | filters.sticker)
