@@ -3,7 +3,7 @@ import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL_ID, POST_CHANNELS, TIMEZONE, OWNER_ID
-from utils.helpers import get_greeting, post_to_channels
+from utils.helpers import post_text_to_channels, post_media_to_channels, get_greeting
 from datetime import datetime, timedelta
 import pytz
 
