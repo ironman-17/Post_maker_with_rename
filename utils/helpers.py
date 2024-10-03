@@ -4,6 +4,7 @@ from pyrogram import Client
 from pyrogram.types import Message
 from config import POST_CHANNELS, LOG_CHANNEL_ID
 
+# Function to get greeting based on current time
 def get_greeting():
     now = datetime.now(timezone('Asia/Kolkata'))
     hour = now.hour
@@ -16,69 +17,87 @@ def get_greeting():
     else:
         return "Good night"
 
+# Function to post message to channels
 async def post_to_channels(client: Client, message: Message):
-    if message and isinstance(message, Message):
-        for channel in POST_CHANNELS:
-            try:
-                if message.photo:
-                    # Send photo to channel
+    if isinstance(message, Message):
+        try:
+            # Agar message text ho
+            if message.text:
+                for channel in POST_CHANNELS:
+                    greeting = get_greeting()  # Get greeting based on current time
+                    await client.send_message(
+                        chat_id=channel,
+                        text=f"{greeting}\n\n{message.text}"  # Send text with greeting
+                    )
+            
+            # Agar message photo ho
+            elif message.photo:
+                for channel in POST_CHANNELS:
                     await client.send_photo(
                         chat_id=channel,
                         photo=message.photo.file_id,
-                        caption=message.caption or "Here is the photo!"  # Optional caption
+                        caption=message.caption or "Here is a photo!"
                     )
-                elif message.document:
-                    # Send document to channel
+            
+            # Agar message document ho
+            elif message.document:
+                for channel in POST_CHANNELS:
                     await client.send_document(
                         chat_id=channel,
                         document=message.document.file_id,
-                        caption=message.caption or "Here is the document!"  # Optional caption
+                        caption=message.caption or "Here is a document!"
                     )
-                elif message.video:
-                    # Send video to channel
+            
+            # Agar message video ho
+            elif message.video:
+                for channel in POST_CHANNELS:
                     await client.send_video(
                         chat_id=channel,
                         video=message.video.file_id,
-                        caption=message.caption or "Here is the video!"  # Optional caption
+                        caption=message.caption or "Here is a video!"
                     )
-                elif message.audio:
-                    # Send audio to channel
+            
+            # Agar message audio ho
+            elif message.audio:
+                for channel in POST_CHANNELS:
                     await client.send_audio(
                         chat_id=channel,
                         audio=message.audio.file_id,
-                        caption=message.caption or "Here is the audio!"  # Optional caption
+                        caption=message.caption or "Here is an audio!"
                     )
-                elif message.sticker:
-                    # Send sticker to channel
+            
+            # Agar message sticker ho
+            elif message.sticker:
+                for channel in POST_CHANNELS:
                     await client.send_sticker(
                         chat_id=channel,
                         sticker=message.sticker.file_id
                     )
-                elif message.text:
-                    # Send text to channel
-                    await client.send_message(
-                        chat_id=channel,
-                        text=message.text
-                    )
-            except Exception as e:
-                print(f"Error sending message to {channel}: {e}")
-    else:
-        print(f"Error: The provided message is not a valid Pyrogram Message object. Content: {message}")
 
+        except Exception as e:
+            print(f"Error sending message to {channel}: {e}")
+    else:
+        print(f"Invalid message object: {message}")
+
+# Error handling function to log any issues
 async def log_to_channel(client: Client, message: str):
     try:
         await client.send_message(LOG_CHANNEL_ID, message)
     except Exception as e:
         print(f"Error logging message: {e}")
 
-async def handle_photo(client: Client, message: Message):
-    if isinstance(message, Message) and message.photo:
-        caption = "Auto-captioned text here"
-        try:
-            await client.send_photo(
-                chat_id=message.chat.id,
-                photo=message.photo.file_id,
-                caption=caption
-            )
-        except Exception as e:
-            print(f"Error sending photo caption: {e}")
+# Handler for text messages
+@Client.on_message(filters.text)
+async def handle_text(client: Client, message: Message):
+    try:
+        await post_to_channels(client, message)
+    except Exception as e:
+        print(f"Error occurred while handling text: {e}")
+
+# Handler for media messages (photo, document, video, audio, sticker)
+@Client.on_message(filters.photo | filters.document | filters.video | filters.audio | filters.sticker)
+async def handle_media(client: Client, message: Message):
+    try:
+        await post_to_channels(client, message)
+    except Exception as e:
+        print(f"Error occurred while handling media: {e}")
