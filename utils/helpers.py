@@ -1,4 +1,4 @@
-from pyrogram import Client, filters  # filters import karo
+from pyrogram import Client, filters
 from pyrogram.types import Message
 from config import POST_CHANNELS, LOG_CHANNEL_ID
 from datetime import datetime
@@ -6,10 +6,14 @@ from pytz import timezone
 
 # Function to post message to channels
 async def post_to_channels(client: Client, message: Message):
-    if isinstance(message, Message):
+    if isinstance(message, Message):  # Ensure the message is an instance of Message
         try:
+            # Debugging message type and content
+            print(f"Received a message of type: {type(message)} with content: {message}")
+
             # Agar message text ho
             if message.text:
+                print(f"Sending text message to channels: {message.text}")
                 for channel in POST_CHANNELS:
                     await client.send_message(
                         chat_id=channel,
