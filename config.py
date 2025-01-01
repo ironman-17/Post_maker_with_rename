@@ -1,14 +1,14 @@
 # config.py
 
-API_ID = 25208218
-API_HASH = 'cc8e841203c92f077015b865f44a8663'  # Corrected line
-BOT_TOKEN = '7478730845:AAF19Hkk5uQbb6NRD1_RKtwwEAKuFZ7NxEc'
-OWNER_ID = 6174868004
-MONGO_URI = 'mongodb+srv://mohdkaif2082:kaif1344@cluster0.pr8z3dx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+API_ID = 20902603
+API_HASH = '79e5caa103a9e9fb0183390b4800845d'  # Corrected line
+BOT_TOKEN = '7358459130:AAFG4DwbmI5rfyN9LMB410nEsYmgsZig5EE'
+OWNER_ID = 6283322330
+MONGO_URI = 'mongodb+srv://Mastersender:17032008@cluster0.dt8i8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
 
 # Channels and IDs
-LOG_CHANNEL_ID = -1002192763590  # Single log channel
-POST_CHANNELS = [-1002053258285, -1002233212878, -1002193015686, -1002227906864]  # Multiple post channels
+LOG_CHANNEL_ID = -1002179136370  # Single log channel
+POST_CHANNELS = [-1002475525207]  # Multiple post channels
 
 # Timezone for scheduling and periodic tasks
 TIMEZONE = 'Asia/Kolkata'
